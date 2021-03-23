@@ -5,7 +5,60 @@ output: html_notebook
 
 Open required libraries
 ```{r}
-plot(cars)
+library(readxl)
+library(TDPanalysis)
+library(lubridate)
+library(stringr)
+
+# clear workspace
+rm(list=ls())
+
+fname_current <- "CellCounts_BAN_10JUN19_Rtest.xlsx"
+pathname1 <- file.path("~/Documents/Xylogenesis/Project_5 Bandelier/3. R/src/data",fname_current)
+
+# [5JAN21] need to insert pathname
+data <- read_xlsx(pathname1, 
+                  sheet = "data_BAN",
+                  range = "J159:AB936", 
+                  na = "-999")
+data <- data.frame(data)
+
+colnames(data) <- c("actions", 
+                    "junk", 
+                    "smp_ID",
+                    "junk",
+                    "month_s",
+                    "day_s",
+                    "year_s",
+                    "C1","E1","T1","M1",
+                    "C2","E2","T2","M2",
+                    "C3","E3","T3","M3"
+                    )
+
+# "actions" are labelled: "RE-DO","REJECT" or "NA". For "NA" records, there is cell count data
+# Parse out samples that need to be Redone or Rejected
+data.RR <- subset(data,!is.na(data$actions))
+
+# ~~~~~~~~~~~~~~~~~~  ONLY RECORDS WITH CELL COUNT DATA
+
+# Parse out only samples with cell count data
+dataCC.data <- subset(data,is.na(data$actions))
+dataCC.data2 <- dataCC.data[,c(-1,-2,-4)]
+dataCC.data2 <- data.frame(dataCC.data2)
+nrec <- length(dataCC.data2[,1])
+
+#data.plus1$actions[is.na(data.plus1$actions)] <- 43
+#data.data <- subset(data.plus1,data.plus1$actions==43)
+
+# CONVERT DAYS TO JULIAN DAYS
+ndays_month <- c(31,28,31,30,31,30,31,31,30,31,30,31)
+ndays_moncum <- cumsum(ndays_month)
+
+doy <- ndays_moncum[dataCC.data2$month_s-1]+as.numeric(dataCC.data2$day_s)
+DOY <- matrix(data=doy,nrow=nrec,ncol=1)
+
+# add DOY to raw data set
+chk1.data <- cbind(DOY,dataCC.data2)
 ```
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
