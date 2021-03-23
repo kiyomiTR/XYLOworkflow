@@ -1,9 +1,18 @@
 ---
-title: "Reading XYLO data from a spreadsheet"
+title: "Reading Cell Count data from spreasheet (XL)"
 output: html_notebook
 ---
+PURPOSE: This script reads in cell count data from excel spreadsheet
 
-Open required libraries
+1. What are the sampling dates?
+2. What are the sample IDs for each year/site?
+3. What is the sampling depth for each sampling date?
+4. What are the t-1 measurements for each sample? 
+
+Where are we missing data?
+
+File History: 
+[23MAR21] this file was copied from the Bandelier Project: CellCountDatabase_00.Rmd
 ```{r}
 library(readxl)
 library(TDPanalysis)
@@ -61,8 +70,216 @@ DOY <- matrix(data=doy,nrow=nrec,ncol=1)
 chk1.data <- cbind(DOY,dataCC.data2)
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+PLOTTING SAMPLING DEPTH BY SAMPLING DAY
+This gives me an idea of how much data I have and when.
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+ This chunk is for PIPO
+```{r}
+# PIPO
+# Subset all PIPO samples - ones that begin with "B"
+PIPO_01.data <- chk1.data[str_detect(chk1.data$smp_ID,"^B\\w*"),]  # string specifies ONLY IDs that begin with B 
+
+# Sort data by sampling date: 1) yr, 2) month, 3) day
+# then by 4) smp_ID
+PIPOByDate.data <- PIPO_01.data[order(PIPO_01.data$year_s,
+                              PIPO_01.data$month_s,
+                              PIPO_01.data$day_s,
+                              PIPO_01.data$smp_ID),]
+
+# What years do we have? 
+chk.SmpYrs <- unique(PIPOByDate.data$year_s)
+chk.SmpYrs
+
+#Do all dates make sense? - make histogram for each year
+PPdata.2016 <- subset(PIPOByDate.data,PIPOByDate.data$year_s==16)
+PPdata.2017 <- subset(PIPOByDate.data,PIPOByDate.data$year_s==17)
+PPdata.2018 <- subset(PIPOByDate.data,PIPOByDate.data$year_s==18)
+
+# ~~~~~~~~~~~~~~~ PIPO 2016
+SmpDay2016_beg <- min(PPdata.2016$DOY,na.rm = T)
+SmpDay2016_end <- max(PPdata.2016$DOY,na.rm = T)
+SmpPer2016_days <- SmpDay2016_end-SmpDay2016_beg+1
+
+# Sampling dates
+SmpDatesPP.2016 <- unique(PPdata.2016$DOY)
+
+# Tree IDs
+TreeIDsPP.2016 <- unique(PPdata.2016$smp_ID)
+
+hist(PPdata.2016$DOY,
+     breaks=SmpPer2016_days, 
+     main = "",
+     xaxt="n")
+abline(v=ndays_moncum, lty=2)
+
+axis(1,at=seq(0,365,30))
+axis(3, at = c(15,45,75,106,136,167,197,228,259,289,319,349),
+     labels=c("J","F","M","A","M","J","J","A","S","O","N","D"),
+     tck=-.00,padj=1,cex.axis=1.2)
+
+# ~~~~~~~~~~~~~~~ PIPO 2017
+SmpDay2017_beg <- min(PPdata.2017$DOY,na.rm = T)
+SmpDay2017_end <- max(PPdata.2017$DOY,na.rm = T)
+SmpPer2017_days <- SmpDay2017_end-SmpDay2017_beg+1
+
+# Sampling dates
+SmpDatesPP.2017 <- unique(PPdata.2017$DOY)
+
+# Tree IDs
+TreeIDsPP.2017 <- unique(PPdata.2017$smp_ID)
+
+hist(PPdata.2017$DOY,
+     breaks=SmpPer2017_days, 
+     main = "",
+     xaxt="n")
+abline(v=ndays_moncum, lty=2)
+
+axis(1,at=seq(0,365,30))
+axis(3, at = c(15,45,75,106,136,167,197,228,259,289,319,349),
+     labels=c("J","F","M","A","M","J","J","A","S","O","N","D"),
+     tck=-.00,padj=1,cex.axis=1.2)
+
+# ~~~~~~~~~~~~~~~ PIPO 2018
+SmpDay2018_beg <- min(PPdata.2018$DOY,na.rm = T)
+SmpDay2018_end <- max(PPdata.2018$DOY,na.rm = T)
+SmpPer2018_days <- SmpDay2018_end-SmpDay2018_beg+1
+
+# Sampling dates
+SmpDatesPP.2018 <- unique(PPdata.2018$DOY)
+
+# Tree IDs
+TreeIDsPP.2018 <- unique(PPdata.2018$smp_ID)
+
+hist(PPdata.2018$DOY,
+     breaks=SmpPer2018_days, 
+     main = "",
+     xaxt="n")
+abline(v=ndays_moncum, lty=2)
+
+axis(1,at=seq(0,365,30))
+axis(3, at = c(15,45,75,106,136,167,197,228,259,289,319,349),
+     labels=c("J","F","M","A","M","J","J","A","S","O","N","D"),
+     tck=-.00,padj=1,cex.axis=1.2)
+```
+
+This chunk is for PSME
+```{r}
+# 
+# Subset all PSME samples - ones that begin with "B"
+PSME_01.data <- chk1.data[str_detect(chk1.data$smp_ID,"^D\\w*"),]
+
+# Sort data by sampling date: 1) yr, 2) month, 3) day
+# then by 4) smp_ID
+PSMEByDate.data <- PSME_01.data[order(PSME_01.data$year_s,
+                              PSME_01.data$month_s,
+                              PSME_01.data$day_s,
+                              PSME_01.data$smp_ID),]
+
+# What years do we have? 
+chk.SmpYrs <- unique(PSMEByDate.data$year_s)
+chk.SmpYrs
+
+#Do all dates make sense? - make histogram for each year
+DFdata.2016 <- subset(PSMEByDate.data,PSMEByDate.data$year_s==16)
+DFdata.2017 <- subset(PSMEByDate.data,PSMEByDate.data$year_s==17)
+DFdata.2018 <- subset(PSMEByDate.data,PSMEByDate.data$year_s==18)
+
+# ~~~~~~~~~~~~~~~ PSME 2016
+SmpDay2016_beg <- min(DFdata.2016$DOY,na.rm = T)
+SmpDay2016_end <- max(DFdata.2016$DOY,na.rm = T)
+SmpPer2016_days <- SmpDay2016_end-SmpDay2016_beg+1
+
+# Sampling dates
+SmpDatesDF.2016 <- unique(DFdata.2016$DOY)
+
+# Tree IDs
+TreeIDsDF.2016 <- unique(DFdata.2016$smp_ID)
+
+hist(DFdata.2016$DOY,
+     breaks=SmpPer2016_days, 
+     main = "",
+     xaxt="n")
+abline(v=ndays_moncum, lty=2)
+
+axis(1,at=seq(0,365,30))
+axis(3, at = c(15,45,75,106,136,167,197,228,259,289,319,349),
+     labels=c("J","F","M","A","M","J","J","A","S","O","N","D"),
+     tck=-.00,padj=1,cex.axis=1.2)
+
+# ~~~~~~~~~~~~~~~ PSME 2017
+SmpDay2017_beg <- min(DFdata.2017$DOY,na.rm = T)
+SmpDay2017_end <- max(DFdata.2017$DOY,na.rm = T)
+SmpPer2017_days <- SmpDay2017_end-SmpDay2017_beg+1
+
+# Sampling dates
+SmpDatesDF.2017 <- unique(DFdata.2017$DOY)
+
+# Tree IDs
+TreeIDsDF.2017 <- unique(DFdata.2017$smp_ID)
+
+hist(DFdata.2017$DOY,
+     breaks=SmpPer2017_days, 
+     main = "",
+     xaxt="n")
+abline(v=ndays_moncum, lty=2)
+
+axis(1,at=seq(0,365,30))
+axis(3, at = c(15,45,75,106,136,167,197,228,259,289,319,349),
+     labels=c("J","F","M","A","M","J","J","A","S","O","N","D"),
+     tck=-.00,padj=1,cex.axis=1.2)
+
+# ~~~~~~~~~~~~~~~ PSME 2018
+SmpDay2018_beg <- min(DFdata.2018$DOY,na.rm = T)
+SmpDay2018_end <- max(DFdata.2018$DOY,na.rm = T)
+SmpPer2018_days <- SmpDay2018_end-SmpDay2018_beg+1
+
+# Sampling dates
+SmpDatesDF.2018 <- unique(DFdata.2018$DOY)
+
+# Tree IDs
+TreeIDsDF.2018 <- unique(DFdata.2018$smp_ID)
+
+hist(DFdata.2018$DOY,
+     breaks=SmpPer2018_days, 
+     main = "",
+     xaxt="n")
+abline(v=ndays_moncum, lty=2)
+
+axis(1,at=seq(0,365,30))
+axis(3, at = c(15,45,75,106,136,167,197,228,259,289,319,349),
+     labels=c("J","F","M","A","M","J","J","A","S","O","N","D"),
+     tck=-.00,padj=1,cex.axis=1.2)
+
+```
+
+
+NEXT STEPS
+1) Adjust sampling dates
+2) Compile and re-plot data by sub-group, eg. species
+
+
+COMPUTE AVERAGE COUNTS
+this applies to any datasort 
+```{r}
+# get number of records
+n_rec.data <- length(data.2017)
+
+set.data <- SortByDate.data
+
+AvgCounts.data <- matrix(data = NA,nrow = n_rec,ncol = 4)
+JD <- matrix(data = NA,nrow = n_rec,ncol = 1)
+for (i in 1:n_rec){
+  JD[i,1] <- floor(juldate(c((set.data$year_s[i]+2000),set.data$month_s[i],set.data$day_s[i]))) - 59214
+  C <- c(set.data$C1[i],set.data$C2[i],set.data$C3[i])
+  E <- c(set.data$E1[i],set.data$E2[i],set.data$E3[i])
+  Th <- c(set.data$T1[i],set.data$T2[i],set.data$T3[i])
+  M <- c(set.data$M1[i],set.data$M2[i],set.data$M3[i])
+  AvgCounts.data[i,1] <- mean(C,na.rm = T)
+  AvgCounts.data[i,2] <- mean(E,na.rm = T)
+  AvgCounts.data[i,3] <- mean(Th,na.rm = T)
+  AvgCounts.data[i,4] <- mean(M,na.rm = T)
+}
+
+```
+
