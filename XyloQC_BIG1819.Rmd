@@ -18,12 +18,11 @@ library(readxl)
 library(TDPanalysis)
 library(lubridate)
 library(stringr)
+library(dplyr)
+library(tidyr)
 
 # clear workspace
 rm(list=ls())
-
-#fname_current <- "CellCounts_BAN_10JUN19_Rtest.xlsx"
-#pathname1 <- file.path("~/Documents/Xylogenesis/Project_5 Bandelier/3. R/src/data",fname_current)
 
 fname_current <- "BIG_from 01JULY2020_2.xlsx"
 pathname1 <- file.path("~/Documents/Xylogenesis/Project_6 Monson 2018/2. Data/1. Cell Counts/BIG",fname_current)
@@ -36,17 +35,6 @@ data <- read_xlsx(pathname1,
 data <- data.frame(data)
 ```
 
-colnames(data) <- c("actions", 
-                    "junk", 
-                    "smp_ID",
-                    "junk",
-                    "month_s",
-                    "day_s",
-                    "year_s",
-                    "C1","E1","T1","M1",
-                    "C2","E2","T2","M2",
-                    "C3","E3","T3","M3"
-                    )
 ```{r}
 # "actions" are labelled: "RE-DO","REJECT" or "NA". For "NA" records, there is cell count data
 # Parse out samples that need to be Redone or Rejected
@@ -67,12 +55,37 @@ nrec <- length(dataCC.data2[,1])
 ndays_month <- c(31,28,31,30,31,30,31,31,30,31,30,31)
 ndays_moncum <- cumsum(ndays_month)
 
-doy <- ndays_moncum[dataCC.data2$month_s-1]+as.numeric(dataCC.data2$day_s)
+doy <- ndays_moncum[dataCC.data2$mon_fld-1]+as.numeric(dataCC.data2$day_fld)
 DOY <- matrix(data=doy,nrow=nrec,ncol=1)
 
 # add DOY to raw data set
 chk1.data <- cbind(DOY,dataCC.data2)
 ```
+
+
+MAIN info for database manipulation from: https://datacarpentry.org/R-ecology-lesson/03-dplyr.html
+    SUPP Info 
+      1) rowwise info here: https://dplyr.tidyverse.org/articles/rowwise.html
+```{r}
+# Select specified columns. To select ALL except specified, use "-"
+mickey <- select(chk1.data,C1,C2,C3)
+notmickey <- select(chk1.data,-C1,-C2,-C3)
+
+# Select rows 
+mouse <- filter(chk1.data,mon_fld==7)
+mice <- filter(chk1.data,mon_fld==7,day_fld==18) # all samples from July 18
+
+# Mutations and 
+# pipes %>% : takes the output of one function and passes it on to the next
+
+# take the mean of the three Yr-1 msmts for each sample (row-wise) and put these in a new column 
+chk1.data%>%
+  rowwise()%>%
+  mutate(YrMinus1=mean(c(rad1,rad2,rad3),na.rm=TRUE))%>%
+  head(3)
+
+```
+
 
 
 PLOTTING SAMPLING DEPTH BY SAMPLING DAY

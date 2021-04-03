@@ -22,15 +22,19 @@ library(stringr)
 # clear workspace
 rm(list=ls())
 
-fname_current <- "CellCounts_BAN_10JUN19_Rtest.xlsx"
-pathname1 <- file.path("~/Documents/Xylogenesis/Project_5 Bandelier/3. R/src/data",fname_current)
+#fname_current <- "CellCounts_BAN_10JUN19_Rtest.xlsx"
+#pathname1 <- file.path("~/Documents/Xylogenesis/Project_5 Bandelier/3. R/src/data",fname_current)
+
+fname_current <- "BIG_from 01JULY2020_2.xlsx"
+pathname1 <- file.path("~/Documents/Xylogenesis/Project_6 Monson 2018/2. Data/1. Cell Counts/BIG",fname_current)
 
 # [5JAN21] need to insert pathname
 data <- read_xlsx(pathname1, 
-                  sheet = "data_BAN",
-                  range = "J159:AB936", 
+                  sheet = "data",
+                  range = "A1:AF471", 
                   na = "-999")
 data <- data.frame(data)
+```
 
 colnames(data) <- c("actions", 
                     "junk", 
@@ -43,7 +47,7 @@ colnames(data) <- c("actions",
                     "C2","E2","T2","M2",
                     "C3","E3","T3","M3"
                     )
-
+```{r}
 # "actions" are labelled: "RE-DO","REJECT" or "NA". For "NA" records, there is cell count data
 # Parse out samples that need to be Redone or Rejected
 data.RR <- subset(data,!is.na(data$actions))
