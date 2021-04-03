@@ -1,0 +1,130 @@
+---
+title: "Image check"
+output: html_notebook
+---
+PURPOSE: This script reads in cell count data from excel spreadsheet
+
+APPROACH: 
+1. Read in cell count data from excel spreadsheet
+2. Separate samples by tree
+3. Go through each sample in each tree
+4. Check Yr-1 for each sample: FR yes or no?
+5. Enter data in new column
+
+RESOURCES
+1. Joining data tables based on a column
+https://www.infoworld.com/article/3454356/how-to-merge-data-in-r-using-r-merge-dplyr-or-datatable.html Tutorial video
+    data: bit.ly/USFlightDelays
+    code: www.infoworld.com/article/3454356
+    
+
+I. Read in data from spreadsheet
+```{r}
+library(readxl)
+library(TDPanalysis)
+library(lubridate)
+library(stringr)
+library(dplyr)
+library(tidyr)
+library(imager)
+
+# clear workspace
+rm(list=ls())
+
+fname_current <- "BIG_from 01JULY2020_2.xlsx"
+pathname1 <- file.path("~/Documents/Xylogenesis/Project_6 Monson 2018/2. Data/1. Cell Counts/BIG",fname_current)
+
+# [5JAN21] need to insert pathname
+data <- read_xlsx(pathname1, 
+                  sheet = "data",
+                  range = "A1:AF471", 
+                  na = "-999")
+data <- data.frame(data)
+```
+
+```{r}
+# "actions" are labelled: "RE-DO","REJECT" or "NA". For "NA" records, there is cell count data
+# Parse out samples that need to be Redone or Rejected
+data.RR <- subset(data,!is.na(data$actions))
+
+# ~~~~~~~~~~~~~~~~~~  ONLY RECORDS WITH CELL COUNT DATA
+
+# Parse out only samples with cell count data
+dataCC.data <- subset(data,is.na(data$actions))
+#dataCC.data2 <- dataCC.data[,c(-1,-2,-4)]
+#dataCC.data2 <- data.frame(dataCC.data2)
+nrec <- length(dataCC.data[,1])
+
+# Convert to data frame
+dataCC.data <- data.frame(dataCC.data)
+
+# CONVERT DAYS TO JULIAN DAYS
+ndays_month <- c(31,28,31,30,31,30,31,31,30,31,30,31)
+ndays_moncum <- cumsum(ndays_month)
+
+doy <- ndays_moncum[dataCC.data$mon_fld-1]+as.numeric(dataCC.data$day_fld)
+DOY <- matrix(data=doy,nrow=nrec,ncol=1)
+FR_curr <- matrix(data=NA,nrow=nrec,ncol=1)  # Add a column to insert FR presence absence data
+FR_tneg1 <- matrix(data=NA,nrow=nrec,ncol=1)  # Add a column to insert FR presence absence data
+
+# add DOY to raw data set
+chk1.data <- cbind(DOY,dataCC.data,FR_curr,FR_tneg1)
+```
+
+
+MAIN info for database manipulation from: https://datacarpentry.org/R-ecology-lesson/03-dplyr.html
+    SUPP Info 
+      1) rowwise info here: https://dplyr.tidyverse.org/articles/rowwise.html
+```{r}
+# Select specified columns. To select ALL except specified, use "-"
+mickey <- select(chk1.data,C1,C2,C3)
+notmickey <- select(chk1.data,-C1,-C2,-C3)
+
+# Select rows 
+mouse <- filter(chk1.data,mon_fld==7)
+mice <- filter(chk1.data,mon_fld==7,day_fld==18) # all samples from July 18
+
+# Mutations and 
+# pipes %>% : takes the output of one function and passes it on to the next
+
+# take the mean of the three Yr-1 msmts for each sample (row-wise) and put these in a new column 
+chk1.data%>%
+  rowwise()%>%
+  mutate(YrMinus1=mean(c(rad1,rad2,rad3),na.rm=TRUE))%>%
+  head(3)
+
+```
+
+Parse out trees, manually find images and assess
+RESOURCES
+arrange : https://dplyr.tidyverse.org/reference/arrange.html
+```{r}
+
+#ImgCheck <- select(chk1.data,mon_lab,day_lab,yr_lab,Smp_ID,mon_fld,day_fld,yr_fld,IMG_3,IMG_4)
+
+# select only data that was collected in 2019
+ImgCheck2019 <- filter(chk1.data,yr_lab==2019)
+ImgCheck2019_sort <- arrange(ImgCheck2019,mon_lab,day_lab,IMG_3)
+
+```
+
+Find and open image in RStudio
+1. Go to folder
+2. Open folder, go to files
+```{r}
+# List CS folders
+#folder <- list.files(path = "~/Documents/Xylogenesis/Project_6 Monson 2018/2. Data/2. Images")
+
+# NEXT: Identify folder of interest by data collection date
+
+# [2APR2021] For now, I will type this in manually
+IMGpath <- "~/Documents/Xylogenesis/Project_6 Monson 2018/2. Data/2. Images/Folder_20190601"
+ImageList <- list.files(path = IMGpath)
+ImageList
+
+image_path <- file.path("~/Documents/Xylogenesis/Project_6 Monson 2018/2. Data/2. Images",folder[1],ImageList[5])
+
+im <- load.image(image_path)
+plot(im)
+```
+
